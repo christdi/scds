@@ -1,2 +1,3 @@
 # scds
-Simple C Data Structures
+
+SCDS (Simple C Data Structures) is a library providing data structures for use in C.
