@@ -35,6 +35,7 @@ set_target_properties(unity PROPERTIES C_CLANG_TIDY "")
 file(GLOB_RECURSE TEST_FILES RELATIVE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/test/*.c)
 
 add_executable(test_app ${TEST_FILES})
+set_target_properties(test_app PROPERTIES C_CLANG_TIDY "")
 target_link_libraries(test_app ${LIB_NAME} unity)
 add_test(test_suite test_app)
 

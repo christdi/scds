@@ -261,27 +261,31 @@ void test_GIVEN_linked_list_WHEN_sort_THEN_list_is_sorted() {
     linked_list_t list;
     linked_list_init(&list);
 
-    int data1 = 1;
-    int data2 = 2;
-    int data3 = 3;
+    int data1 = 153;
+    int data2 = 23;
+    int data3 = 57;
+    int data4 = 92;
+    int data5 = 209;
     
     linked_list_insert(&list, &data1);
     linked_list_insert(&list, &data2);
     linked_list_insert(&list, &data3);
+    linked_list_insert(&list, &data4);
+    linked_list_insert(&list, &data5);
     
-    TEST_ASSERT_EQUAL(3, list.size);
+    TEST_ASSERT_EQUAL(5, list.size);
     TEST_ASSERT_NOT_NULL(list.head);
     TEST_ASSERT_NOT_NULL(list.tail);
-    TEST_ASSERT_EQUAL(1, *(int*)list.head->data);
-    TEST_ASSERT_EQUAL(3, *(int*)list.tail->data);
+    TEST_ASSERT_EQUAL(data1, *(int*)list.head->data);
+    TEST_ASSERT_EQUAL(data5, *(int*)list.tail->data);
     
     linked_list_sort(&list, compare_int_descending);
     
-    TEST_ASSERT_EQUAL(3, list.size);
+    TEST_ASSERT_EQUAL(5, list.size);
     TEST_ASSERT_NOT_NULL(list.head);
     TEST_ASSERT_NOT_NULL(list.tail);
-    TEST_ASSERT_EQUAL(3, *(int*)list.head->data);
-    TEST_ASSERT_EQUAL(1, *(int*)list.tail->data);
+    TEST_ASSERT_EQUAL(data5, *(int*)list.head->data);
+    TEST_ASSERT_EQUAL(data2, *(int*)list.tail->data);
 }
 
 int main(int argc, char* argv[]) {

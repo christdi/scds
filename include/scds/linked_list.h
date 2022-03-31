@@ -69,10 +69,6 @@ int linked_list_remove_if(linked_list_t *list, void* data, bool (*predicate)(voi
 int linked_list_steal_if(linked_list_t *list, linked_list_t* dest, void* data, bool (*predicate)(void *, void*));
 int linked_list_steal(linked_list_t* source, linked_list_t* dest, size_t index);
 int linked_list_sort(linked_list_t *list, compare_func_t compare);
-
-int linked_list_size(linked_list_t *list);
 int linked_list_clear(linked_list_t *list);
-
-void* linked_list_at(linked_list_t *list, size_t index);
 
 #endif

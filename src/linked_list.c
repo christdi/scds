@@ -34,8 +34,8 @@ static int attach_node(linked_list_t* list, node_t* node);
 static int detach_node(linked_list_t* list, node_t* node);
 static int steal_node(linked_list_t* source, linked_list_t* dest, node_t* node);
 static int quick_sort(linked_list_t* list, node_t* start, node_t* end, compare_func_t compare);
-static int insert_after(linked_list_t* list, node_t* after, node_t* node);
 static node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_start, node_t** new_end, compare_func_t compare);
+static int insert_after(linked_list_t* list, node_t* after, node_t* node);
 
 /**
  * @brief Create a new linked list.
@@ -274,19 +274,6 @@ int linked_list_sort(linked_list_t *list, compare_func_t compare) {
 }
 
 /**
- * @brief Gets the size of a linked list.
- * 
- * @param list The linked list to get the size of.
- *
- * @return The size of the linked list.
- */
-int linked_list_size(linked_list_t *list) {
-  assert(list);
-
-  return list->size;
-}
-
-/**
  * @brief Clears a linked list.
  * 
  * @param list The linked list to clear.
@@ -312,26 +299,6 @@ int linked_list_clear(linked_list_t *list) {
 }
 
 /**
- * @brief Gets the data from a linked list at a given index.
- * 
- * @param list The linked list to get the data from.
- * @param index The index to get the data from.
- * @return The data at the given index.
- */
-void* linked_list_at(linked_list_t *list, size_t index) {
-  assert(list);
-  assert(index < list->size);
-
-  node_t* node = list->head;
-
-  for (size_t i = 0; i < index; i++) {
-    node = node->next;
-  }
-
-  return node->data;
-}
-
-/**
  * @brief Module internal function to get a node at a given index.
  * 
  * @param list The linked list to get the node from.
@@ -352,7 +319,7 @@ node_t* node_at(linked_list_t* list, size_t index) {
 }
 
 /**
- * @brief Module internal function to attach a node to a linked list.
+ * @brief Module internal function to attach a node to the end of a linked list.
  * 
  * @param list The linked list to attach the node to.
  * @param node The node to attach.
@@ -434,6 +401,15 @@ int steal_node(linked_list_t* source, linked_list_t* dest, node_t* node) {
   return 0;
 }
 
+/**
+ * @brief Module internal function to sort a linked list using quick sort.
+ * 
+ * @param list The linked list to sort.
+ * @param start The start node of the partition of the linked list.
+ * @param end The end node of the partition of the linked list.
+ * @param compare The comparator to use.
+ * @return 0 on success, -1 on failure.
+ */
 int quick_sort(linked_list_t* list, node_t* start, node_t* end, compare_func_t compare) {
   assert(list);
   assert(start);
@@ -449,19 +425,13 @@ int quick_sort(linked_list_t* list, node_t* start, node_t* end, compare_func_t c
     return -1;
   }
 
-  if (new_start != NULL && new_start != pivot) {
+  if (pivot != new_start) {
     if (quick_sort(list, new_start, pivot->prev, compare) == -1) {
       return -1;
     }
   }
 
-  if (pivot != list->tail) {
-    if (quick_sort(list, start, pivot->prev, compare) == -1) {
-      return -1;
-    }
-  }
-
-  if (pivot != start) {
+  if (pivot != new_end) {
     if (quick_sort(list, pivot->next, new_end, compare) == -1) {
       return -1;
     }
@@ -470,6 +440,17 @@ int quick_sort(linked_list_t* list, node_t* start, node_t* end, compare_func_t c
   return 0;
 }
 
+/**
+ * @brief Module internal function to partition a segment of a linked list during quick sort.
+ * 
+ * @param list The linked list to partition.
+ * @param start The start of the segment to partition.
+ * @param end The end of the segment to partition.
+ * @param new_start Out parameter containing the new start of the segment.
+ * @param new_end Out parameter containing the new end of the segment.
+ * @param compare The compare function to use. 
+ * @return The pivot node.
+ */
 node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_start, node_t** new_end, compare_func_t compare) {
   assert(list);
   assert(start);
@@ -477,6 +458,9 @@ node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_
   assert(compare);
 
   if (start == end) {
+    *new_start = start;
+    *new_end = start;
+
     return start;
   }
 
@@ -495,7 +479,9 @@ node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_
         return NULL;
       }
 
-      *new_end = current;
+      if (*new_end == NULL) {
+        *new_end = current;
+      }    
     } else {
       if (*new_start == NULL) {
         *new_start = current;
@@ -509,9 +495,21 @@ node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_
     *new_start = pivot;
   }
 
+  if (*new_end == NULL) {
+    *new_end = pivot;
+  }
+
   return pivot;
 }
 
+/**
+ * @brief Module internal function to insert a node after a given node.
+ * 
+ * @param list The linked list to insert the node into.
+ * @param after The node to insert after. 
+ * @param node  The node to insert. 
+ * @return 0 on success, -1 on failure.
+ */ 
 int insert_after(linked_list_t* list, node_t* after, node_t* node) {
   assert(list);
   assert(after);
@@ -528,6 +526,8 @@ int insert_after(linked_list_t* list, node_t* after, node_t* node) {
 
   after->next = node;
   node->next->prev = node;
+
+  list->size++;
 
   return 0;
 }
