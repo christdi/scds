@@ -25,6 +25,7 @@ SOFTWARE.
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "scds/linked_list.h"
 
@@ -32,7 +33,9 @@ static node_t* node_at(linked_list_t* list, size_t index);
 static int attach_node(linked_list_t* list, node_t* node);
 static int detach_node(linked_list_t* list, node_t* node);
 static int steal_node(linked_list_t* source, linked_list_t* dest, node_t* node);
-static int swap_nodes(linked_list_t* list, node_t* a, node_t* b);
+static int quick_sort(linked_list_t* list, node_t* start, node_t* end, compare_func_t compare);
+static int insert_after(linked_list_t* list, node_t* after, node_t* node);
+static node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_start, node_t** new_end, compare_func_t compare);
 
 /**
  * @brief Create a new linked list.
@@ -255,9 +258,19 @@ int linked_list_steal(linked_list_t* source, linked_list_t* dest, size_t index) 
  * @param compare The comparator to use.
  * @return 0 on success, -1 on failure.
  */
-int linked_list_sort(linked_list_t *list, int (*compare)(const void *, const void *)) {
+int linked_list_sort(linked_list_t *list, compare_func_t compare) {
   assert(list);
   assert(compare);
+
+  if (list->size <= 1) {
+    return 0;
+  }
+
+  if (quick_sort(list, list->head, list->tail, compare) == -1) {
+    return -1;
+  }
+
+  return 0;  
 }
 
 /**
@@ -421,50 +434,100 @@ int steal_node(linked_list_t* source, linked_list_t* dest, node_t* node) {
   return 0;
 }
 
-/**
- * @brief Module internal function to swap two nodes.
- * 
- * @param list The linked list to swap the nodes in.
- * @param a The first node to swap.
- * @param b The second node to swap.
- * @return 0 on success, -1 on failure.
- */
-int swap_nodes(linked_list_t* list, node_t* a, node_t* b) {
+int quick_sort(linked_list_t* list, node_t* start, node_t* end, compare_func_t compare) {
   assert(list);
-  assert(a);
-  assert(b);
+  assert(start);
+  assert(end);
+  assert(compare);
+  
+  node_t* new_start= NULL;
+  node_t* new_end = NULL;
 
-  if (a == b) {
-    return 0;
+  node_t* pivot = partition(list, start, end, &new_start, &new_end, compare);
+  
+  if (pivot == NULL) {
+    return -1;
   }
 
-  if (a->prev != NULL) {
-    a->prev->next = b;
-  } else {
-    list->head = b;
+  if (new_start != NULL && new_start != pivot) {
+    if (quick_sort(list, new_start, pivot->prev, compare) == -1) {
+      return -1;
+    }
   }
 
-  if (b->next != NULL) {
-    b->next->prev = a;
-  } else {
-    list->tail = a;
+  if (pivot != list->tail) {
+    if (quick_sort(list, start, pivot->prev, compare) == -1) {
+      return -1;
+    }
   }
 
-  if (a->next != NULL) {
-    a->next->prev = b;
+  if (pivot != start) {
+    if (quick_sort(list, pivot->next, new_end, compare) == -1) {
+      return -1;
+    }
   }
 
-  if (b->prev != NULL) {
-    b->prev->next = a;
+  return 0;
+}
+
+node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_start, node_t** new_end, compare_func_t compare) {
+  assert(list);
+  assert(start);
+  assert(end);
+  assert(compare);
+
+  if (start == end) {
+    return start;
   }
 
-  node_t* tmp = a->next;
-  a->next = b->next;
-  b->next = tmp;
+  node_t* pivot = end;
+  node_t* current = start;
 
-  tmp = a->prev;
-  a->prev = b->prev;
-  b->prev = tmp;
+  while (current != pivot) {
+    node_t* next = current->next;
+
+    if (compare(current->data, pivot->data) > 0) {
+      if (detach_node(list, current) == -1) {
+        return NULL;
+      }
+
+      if (insert_after(list, pivot, current) == -1) {
+        return NULL;
+      }
+
+      *new_end = current;
+    } else {
+      if (*new_start == NULL) {
+        *new_start = current;
+      }
+    }
+
+    current = next;
+  }
+
+  if (*new_start == NULL) {
+    *new_start = pivot;
+  }
+
+  return pivot;
+}
+
+int insert_after(linked_list_t* list, node_t* after, node_t* node) {
+  assert(list);
+  assert(after);
+  assert(node);
+  assert(node->prev == NULL);
+  assert(node->next == NULL);
+
+  if (after->next == NULL) {
+    return attach_node(list, node);
+  }
+
+  node->next = after->next;
+  node->prev = after;
+
+  after->next = node;
+  node->next->prev = node;
 
   return 0;
 }

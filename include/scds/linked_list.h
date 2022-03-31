@@ -35,6 +35,7 @@ typedef struct node node_t;
 /**
  * Structs
 **/
+typedef int (*compare_func_t)(const void *, const void *);
 
 /**
  * Represents a node in a linked list.
@@ -67,7 +68,7 @@ int linked_list_remove(linked_list_t *list, void *data);
 int linked_list_remove_if(linked_list_t *list, void* data, bool (*predicate)(void *, void*));
 int linked_list_steal_if(linked_list_t *list, linked_list_t* dest, void* data, bool (*predicate)(void *, void*));
 int linked_list_steal(linked_list_t* source, linked_list_t* dest, size_t index);
-int linked_list_sort(linked_list_t *list, int (*compare)(const void *, const void *));
+int linked_list_sort(linked_list_t *list, compare_func_t compare);
 
 int linked_list_size(linked_list_t *list);
 int linked_list_clear(linked_list_t *list);
