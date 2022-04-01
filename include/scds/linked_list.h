@@ -22,36 +22,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef SCDS_LL_H
-#define SCDS_LL_H
+#ifndef SCDS_LINKED_LIST_H
+#define SCDS_LINKED_LIST_H
 
 #include <stdbool.h>
 
 /**
  * Typedefs
  */
-typedef struct node node_t;
+typedef struct linked_list_node linked_list_node_t;
+typedef int (*compare_func_t)(const void *, const void *);
 
 /**
  * Structs
 **/
-typedef int (*compare_func_t)(const void *, const void *);
 
 /**
  * Represents a node in a linked list.
  */
-typedef struct node {
+typedef struct linked_list_node {
     void *data;
-    node_t *next;
-    node_t *prev;
-} node_t;
+    linked_list_node_t *next;
+    linked_list_node_t *prev;
+} linked_list_node_t;
 
 /**
  * Represents a linked list.
  */
 typedef struct linked_list {
-    node_t *head;
-    node_t *tail;
+    linked_list_node_t *head;
+    linked_list_node_t *tail;
     size_t size;
 } linked_list_t;
 

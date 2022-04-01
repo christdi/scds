@@ -29,13 +29,13 @@ SOFTWARE.
 
 #include "scds/linked_list.h"
 
-static node_t* node_at(linked_list_t* list, size_t index);
-static int attach_node(linked_list_t* list, node_t* node);
-static int detach_node(linked_list_t* list, node_t* node);
-static int steal_node(linked_list_t* source, linked_list_t* dest, node_t* node);
-static int quick_sort(linked_list_t* list, node_t* start, node_t* end, compare_func_t compare);
-static node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_start, node_t** new_end, compare_func_t compare);
-static int insert_after(linked_list_t* list, node_t* after, node_t* node);
+static linked_list_node_t* node_at(linked_list_t* list, size_t index);
+static int attach_node(linked_list_t* list, linked_list_node_t* node);
+static int detach_node(linked_list_t* list, linked_list_node_t* node);
+static int steal_node(linked_list_t* source, linked_list_t* dest, linked_list_node_t* node);
+static int quick_sort(linked_list_t* list, linked_list_node_t* start, linked_list_node_t* end, compare_func_t compare);
+static linked_list_node_t* partition(linked_list_t* list, linked_list_node_t* start, linked_list_node_t* end, linked_list_node_t** new_start, linked_list_node_t** new_end, compare_func_t compare);
+static int insert_after(linked_list_t* list, linked_list_node_t* after, linked_list_node_t* node);
 
 /**
  * @brief Create a new linked list.
@@ -112,9 +112,9 @@ int linked_list_insert(linked_list_t *list, void *data) {
   assert(list);
   assert(data);
 
-  node_t* node = NULL;
+  linked_list_node_t* node = NULL;
   
-  if ((node = malloc(sizeof(node_t))) == NULL) {
+  if ((node = malloc(sizeof(linked_list_node_t))) == NULL) {
     return -1;
   }
 
@@ -141,7 +141,7 @@ int linked_list_remove(linked_list_t *list, void *data) {
   assert(list);
   assert(data);
 
-  for (node_t* node = list->head; node != NULL; node = node->next) {
+  for (linked_list_node_t* node = list->head; node != NULL; node = node->next) {
     if (node->data == data) {
       if (detach_node(list, node) == -1) {
         return -1;
@@ -168,7 +168,7 @@ int linked_list_remove_if(linked_list_t *list, void* data, bool (*predicate)(voi
   assert(list);
   assert(predicate);
 
-  node_t* node = list->head;
+  linked_list_node_t* node = list->head;
 
   while (node != NULL) {
     if (!predicate(node->data, data)) {
@@ -177,7 +177,7 @@ int linked_list_remove_if(linked_list_t *list, void* data, bool (*predicate)(voi
       continue;
     }
 
-    node_t* next = node->next;
+    linked_list_node_t* next = node->next;
 
     if (detach_node(list, node) == -1) {
       return -1;
@@ -205,7 +205,7 @@ int linked_list_steal_if(linked_list_t *list, linked_list_t* dest, void* data, b
   assert(dest);
   assert(predicate);
 
-  node_t* node = list->head;
+  linked_list_node_t* node = list->head;
 
   while (node != NULL) {
     if (!predicate(node->data, data)) {
@@ -214,7 +214,7 @@ int linked_list_steal_if(linked_list_t *list, linked_list_t* dest, void* data, b
       continue;
     }
 
-    node_t* next = node->next;
+    linked_list_node_t* next = node->next;
 
     if (steal_node(list, dest, node) == -1) {
       return -1;
@@ -238,7 +238,7 @@ int linked_list_steal(linked_list_t* source, linked_list_t* dest, size_t index) 
   assert(source);
   assert(dest);
 
-  node_t* node = NULL;
+  linked_list_node_t* node = NULL;
 
   if ((node = node_at(source, index)) == NULL) {
     return -1;
@@ -283,10 +283,10 @@ int linked_list_sort(linked_list_t *list, compare_func_t compare) {
 int linked_list_clear(linked_list_t *list) {
   assert(list);
 
-  node_t* node = list->head;
+  linked_list_node_t* node = list->head;
 
   while (node != NULL) {
-    node_t* next = node->next;
+    linked_list_node_t* next = node->next;
     free(node);
     node = next;
   }
@@ -305,11 +305,11 @@ int linked_list_clear(linked_list_t *list) {
  * @param index The index to get the node from.
  * @return The node at the given index.
  */
-node_t* node_at(linked_list_t* list, size_t index) {
+linked_list_node_t* node_at(linked_list_t* list, size_t index) {
   assert(list);
   assert(index < list->size);
 
-  node_t* node = list->head;
+  linked_list_node_t* node = list->head;
 
   for (size_t i = 0; i < index; i++) {
     node = node->next;
@@ -325,7 +325,7 @@ node_t* node_at(linked_list_t* list, size_t index) {
  * @param node The node to attach.
  * @return 0 on success, -1 on failure.
  */
-int attach_node(linked_list_t* list, node_t* node) {
+int attach_node(linked_list_t* list, linked_list_node_t* node) {
   assert(list);
   assert(node);
 
@@ -354,7 +354,7 @@ int attach_node(linked_list_t* list, node_t* node) {
  * @param node The node to detach.
  * @return 0 on success, -1 on failure.
  */
-int detach_node(linked_list_t* list, node_t* node) {
+int detach_node(linked_list_t* list, linked_list_node_t* node) {
   assert(list);
   assert(node);
 
@@ -386,7 +386,7 @@ int detach_node(linked_list_t* list, node_t* node) {
  * @param node The node to move.
  * @return 0 on success, -1 on failure.
  */
-int steal_node(linked_list_t* source, linked_list_t* dest, node_t* node) {
+int steal_node(linked_list_t* source, linked_list_t* dest, linked_list_node_t* node) {
   assert(source);
   assert(dest);
 
@@ -410,16 +410,16 @@ int steal_node(linked_list_t* source, linked_list_t* dest, node_t* node) {
  * @param compare The comparator to use.
  * @return 0 on success, -1 on failure.
  */
-int quick_sort(linked_list_t* list, node_t* start, node_t* end, compare_func_t compare) {
+int quick_sort(linked_list_t* list, linked_list_node_t* start, linked_list_node_t* end, compare_func_t compare) {
   assert(list);
   assert(start);
   assert(end);
   assert(compare);
   
-  node_t* new_start= NULL;
-  node_t* new_end = NULL;
+  linked_list_node_t* new_start= NULL;
+  linked_list_node_t* new_end = NULL;
 
-  node_t* pivot = partition(list, start, end, &new_start, &new_end, compare);
+  linked_list_node_t* pivot = partition(list, start, end, &new_start, &new_end, compare);
   
   if (pivot == NULL) {
     return -1;
@@ -451,7 +451,7 @@ int quick_sort(linked_list_t* list, node_t* start, node_t* end, compare_func_t c
  * @param compare The compare function to use. 
  * @return The pivot node.
  */
-node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_start, node_t** new_end, compare_func_t compare) {
+linked_list_node_t* partition(linked_list_t* list, linked_list_node_t* start, linked_list_node_t* end, linked_list_node_t** new_start, linked_list_node_t** new_end, compare_func_t compare) {
   assert(list);
   assert(start);
   assert(end);
@@ -464,11 +464,11 @@ node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_
     return start;
   }
 
-  node_t* pivot = end;
-  node_t* current = start;
+  linked_list_node_t* pivot = end;
+  linked_list_node_t* current = start;
 
   while (current != pivot) {
-    node_t* next = current->next;
+    linked_list_node_t* next = current->next;
 
     if (compare(current->data, pivot->data) > 0) {
       if (detach_node(list, current) == -1) {
@@ -510,7 +510,7 @@ node_t* partition(linked_list_t* list, node_t* start, node_t* end, node_t** new_
  * @param node  The node to insert. 
  * @return 0 on success, -1 on failure.
  */ 
-int insert_after(linked_list_t* list, node_t* after, node_t* node) {
+int insert_after(linked_list_t* list, linked_list_node_t* after, linked_list_node_t* node) {
   assert(list);
   assert(after);
   assert(node);
